@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vartan Store</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --accent:#1e6f5c; --bg:#f7f6f2; --card:#ffffff; --text:#222; --muted:#777; --danger:#b3413d; --warn:#c98a1f;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#14171a; --card:#1f2327; --text:#eee; --muted:#9aa0a6; }
+}
+:root[data-theme="dark"]{ --bg:#14171a; --card:#1f2327; --text:#eee; --muted:#9aa0a6; }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+body{max-width:520px;margin:0 auto;padding:10px 12px 90px;}
+h1{font-size:19px;margin:10px 0 4px;}
+h2{font-size:15px;margin:14px 0 6px;color:var(--muted);}
+.card{background:var(--card);border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px;}
+input,select,textarea{width:100%;padding:9px;border:1px solid #ccc4;border-radius:8px;background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;}
+button{padding:10px 14px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;}
+button.secondary{background:#8884;color:var(--text);}
+button.danger{background:var(--danger);}
+.row{display:flex;gap:8px;}
+.row>*{flex:1;}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);padding:8px 4px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -2px 6px rgba(0,0,0,.1);max-width:520px;margin:0 auto;overflow-x:auto;}
+.tabs button{flex:1;background:none;color:var(--muted);font-weight:600;font-size:11px;margin:0 2px;padding:8px 2px;white-space:nowrap;}
+.tabs button.active{background:var(--accent);color:#fff;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.plist{display:flex;flex-direction:column;gap:8px;}
+.pitem{display:flex;gap:10px;background:var(--card);border-radius:10px;padding:10px;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.pitem img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#8882;flex-shrink:0;}
+.pinfo{flex:1;min-width:0;}
+.pinfo b{font-size:14px;}
+.pinfo span{display:block;font-size:12px;color:var(--muted);}
+.pnum{display:inline-block;background:var(--accent);color:#fff;font-size:11px;border-radius:5px;padding:1px 6px;margin-right:5px;}
+.stocklow{color:var(--warn);font-weight:600;}
+.stockcritical{color:var(--danger);font-weight:700;}
+.catheader{font-size:13px;font-weight:700;color:var(--accent);margin:12px 0 4px;}
+.catchip{display:inline-block;background:var(--bg);border:1px solid #8886;color:var(--text);font-size:12px;padding:4px 10px;border-radius:14px;}
+.barcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.bar{width:70%;background:var(--accent);border-radius:4px 4px 0 0;min-height:2px;}
+.barval{font-size:10px;color:var(--muted);margin-bottom:2px;}
+.barlabel{font-size:10px;color:var(--muted);margin-top:4px;}
+.stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #8882;font-size:14px;}
+.stat:last-child{border:none;}
+.search{margin-bottom:10px;}
+.empty{color:var(--muted);text-align:center;padding:20px 0;font-size:14px;}
+.small{font-size:12px;color:var(--muted);margin-top:4px;}
+.dtile{background:var(--card);border-radius:10px;padding:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.dtile .v{font-size:18px;font-weight:700;}
+.dtile .l{font-size:11px;color:var(--muted);margin-top:2px;}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.cartitem{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #8882;font-size:13px;}
+.cartitem:last-child{border:none;}
+.qtybtn{width:30px;padding:6px;text-align:center;flex:none;}
+.hl{outline:2px solid var(--accent);background:rgba(30,111,92,.18) !important;}
+.dayhead{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--accent);margin:12px 0 4px;}
+.receipt{font-family:monospace;font-size:13px;white-space:pre-wrap;background:var(--card);border-radius:10px;padding:14px;}
+</style>
+</head>
+<body>
+
+<h1>Vartan Store</h1>
+
+<div id="tab-home" class="tab-content active">
+  <div class="dgrid">
+    <div class="dtile"><div class="v" id="dToday">₹0</div><div class="l">Today's Sale</div></div>
+    <div class="dtile"><div class="v" id="dProfit">₹0</div><div class="l">Today's Profit</div></div>
+    <div class="dtile"><div class="v" id="dItems">0</div><div class="l">Items Sold Today</div></div>
+    <div class="dtile"><div class="v" id="dMonth">₹0</div><div class="l">Monthly Sale</div></div>
+  </div>
+  <div class="card">
+    <div class="stat"><span>Total Stock Value</span><b id="dStockVal">₹0</b></div>
+    <div class="stat"><span>⚠️ Low Stock Items</span><b id="dLowCount">0</b></div>
+    <div class="stat"><span>Last Backup</span><b id="dBackup">—</b></div>
+  </div>
+  <div class="row">
+    <button onclick="showTab('add')">➕ Add Product</button>
+    <button onclick="showTab('sell')">🛒 Sell</button>
+  </div>
+</div>
+
+<div id="tab-add" class="tab-content">
+  <div class="card">
+    <label>Product Photo</label>
+    <input type="file" id="imgInput" accept="image/*" capture="environment">
+    <img id="imgPreview" style="max-width:100%;border-radius:8px;margin-top:6px;display:none;">
+    <div class="small" id="imgSizeNote"></div>
+
+    <div class="row">
+      <div><label>Product Number</label><input id="pnumber" placeholder="Auto"></div>
+      <div><label>Barcode</label><input id="pbarcode" placeholder="Scan or type"></div>
+    </div>
+
+    <label>Product Name</label>
+    <input id="pname" placeholder="e.g. Steel Thali">
+
+    <label>Category</label>
+    <input id="pcat" placeholder="Type category, e.g. Plastic" autocomplete="off" oninput="showCatSuggestions()" onfocus="showCatSuggestions()">
+    <div id="catSuggestions" style="display:none;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+
+    <div class="row">
+      <div><label>Size</label><input id="psize" placeholder="e.g. 10 inch"></div>
+      <div><label>Min Stock Alert</label><input id="pminstock" type="number" placeholder="5"></div>
+    </div>
+
+    <label>Description (optional)</label>
+    <input id="pdesc" placeholder="Short note">
+
+    <div class="row">
+      <div><label>Fixed Selling Price (MRP ₹)</label><input id="pfixed" type="number" placeholder="0"></div>
+      <div><label>Current Selling Price (₹)</label><input id="pprice" type="number" placeholder="0"></div>
+    </div>
+    <label>Cost Price (₹, optional — for profit tracking)</label>
+    <input id="pcost" type="number" placeholder="0">
+
+    <label>Stock Quantity</label>
+    <input id="pstock" type="number" placeholder="0">
+
+    <div style="margin-top:12px;" class="row">
+      <button id="addBtn" onclick="addProduct()" style="width:100%;">Add Product</button>
+      <button id="cancelEditBtn" class="secondary" onclick="cancelEdit()" style="display:none;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="tab-stock" class="tab-content">
+  <input class="search" id="searchBox" placeholder="Search by number / name / category / barcode" oninput="renderProducts()">
+  <div class="plist" id="plist"></div>
+</div>
+
+<div id="tab-sell" class="tab-content">
+  <input class="search" id="sellSearchBox" placeholder="Search / scan barcode to sell" oninput="renderSellResults()">
+  <div class="plist" id="sellResults"></div>
+  <h2>🧺 Current Bill</h2>
+  <div class="card" id="cartBox"></div>
+  <div class="row">
+    <button onclick="completeBill()">✅ Complete Bill</button>
+    <button class="secondary" onclick="newBill()">🆕 New Bill</button>
+  </div>
+</div>
+
+<div id="tab-bills" class="tab-content">
+  <div class="plist" id="billsList"></div>
+  <div id="billView"></div>
+</div>
+
+<div id="tab-stats" class="tab-content">
+  <h2>Sales — Last 7 Days</h2>
+  <div class="card" id="salesChart" style="display:flex;align-items:flex-end;gap:6px;height:140px;"></div>
+  <h2>🕘 Sales History <span class="small">(tap an item to see it in Stock)</span></h2>
+  <div class="plist" id="historyList"></div>
+  <button class="secondary" id="historyMoreBtn" onclick="historyLimit+=30;renderHistory()" style="width:100%;margin-top:8px;display:none;">Show more</button>
+  <div class="card" id="statsBox" style="margin-top:10px;"></div>
+  <h2>🔥 Top Selling Items</h2>
+  <div class="plist" id="topSelling"></div>
+  <h2>Low Stock</h2>
+  <div class="plist" id="lowstock"></div>
+  <h2>Backup &amp; Restore</h2>
+  <div class="card">
+    <div class="small" id="driveStatus" style="margin-bottom:8px;">Google Drive: not connected — connect once, then every backup uploads automatically.</div>
+    <div class="row" style="margin-bottom:8px;">
+      <button id="driveConnectBtn" onclick="connectDrive()">🔗 Connect Google Drive</button>
+      <button id="driveDisconnectBtn" class="secondary" onclick="disconnectDrive()" style="display:none;">Disconnect</button>
+    </div>
+    <div class="small" style="margin-bottom:8px;">Manual backup (also works without Drive):</div>
+    <div class="row">
+      <button onclick="exportData()">⬇ Backup</button>
+      <button class="secondary" onclick="document.getElementById('importInput').click()">⬆ Restore</button>
+    </div>
+    <input type="file" id="importInput" accept="application/json" style="display:none;" onchange="importData(event)">
+    <div class="small" id="nightlyStatus" style="margin-top:10px;">Nightly auto-backup (10 PM): will save automatically if the app is open around that time.</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button id="btn-home" class="active" onclick="showTab('home')">🏠 Home</button>
+  <button id="btn-add" onclick="showTab('add')">➕ Add</button>
+  <button id="btn-stock" onclick="showTab('stock')">📦 Stock</button>
+  <button id="btn-sell" onclick="showTab('sell')">🛒 Sell</button>
+  <button id="btn-bills" onclick="showTab('bills')">🧾 Bills</button>
+  <button id="btn-stats" onclick="showTab('stats')">📊 Stats</button>
+</div>
+
+<script>
+let products = [], sales = [], bills = [], cart = [];
+try{ products = JSON.parse(localStorage.getItem('vartan_products')||'[]'); }catch(e){ products=[]; }
+try{ sales = JSON.parse(localStorage.getItem('vartan_sales')||'[]'); }catch(e){ sales=[]; }
+try{ bills = JSON.parse(localStorage.getItem('vartan_bills')||'[]'); }catch(e){ bills=[]; }
+
+let _lastUid=0;
+function uid(){ _lastUid = Math.max(Date.now(), _lastUid+1); return _lastUid; }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function monthStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+
+const seedCategories = ['Steel','Plastic','Copper','Kitchen','Other'];
+function allCategories(){
+  const used = products.map(p=>p.cat);
+  return Array.from(new Set([...seedCategories, ...used])).sort();
+}
+function showCatSuggestions(){
+  const box = document.getElementById('catSuggestions');
+  const q = document.getElementById('pcat').value.trim().toLowerCase();
+  const matches = allCategories().filter(c => c.toLowerCase().includes(q)).slice(0,8);
+  if(matches.length===0){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='flex';
+  box.innerHTML = matches.map(c=>`<span class="catchip" onclick="pickCat('${c.replace(/'/g,"\\'")}')">${c}</span>`).join('');
+}
+function pickCat(c){
+  document.getElementById('pcat').value = c;
+  document.getElementById('catSuggestions').style.display='none';
+}
+document.addEventListener('click', function(e){
+  if(e.target.id!=='pcat' && e.target.className!=='catchip'){
+    document.getElementById('catSuggestions').style.display='none';
+  }
+});
+
+function nextNumber(){
+  if(products.length===0) return '1001';
+  const nums = products.map(p=>parseInt(p.number)).filter(n=>!isNaN(n));
+  return nums.length ? String(Math.max(...nums)+1) : String(1001+products.length);
+}
+document.getElementById('pnumber').value = nextNumber();
+let editingId = null;
+
+function editProduct(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  editingId = id;
+  document.getElementById('pnumber').value = p.number;
+  document.getElementById('pbarcode').value = p.barcode||'';
+  document.getElementById('pname').value = p.name;
+  document.getElementById('pcat').value = p.cat;
+  document.getElementById('psize').value = p.size||'';
+  document.getElementById('pminstock').value = p.minStock||5;
+  document.getElementById('pdesc').value = p.desc||'';
+  document.getElementById('pfixed').value = p.fixedPrice||p.price;
+  document.getElementById('pprice').value = p.price;
+  document.getElementById('pcost').value = p.costPrice||'';
+  document.getElementById('pstock').value = p.stock;
+  if(p.img){ document.getElementById('imgPreview').src = p.img; document.getElementById('imgPreview').style.display='block'; }
+  else { document.getElementById('imgPreview').style.display='none'; }
+  document.getElementById('addBtn').textContent = 'Update Product';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  showTab('add');
+}
+
+function resetAddForm(){
+  editingId = null;
+  document.getElementById('pnumber').value = nextNumber();
+  document.getElementById('pbarcode').value='';
+  document.getElementById('pname').value='';
+  document.getElementById('pcat').value='';
+  document.getElementById('psize').value='';
+  document.getElementById('pminstock').value='';
+  document.getElementById('pdesc').value='';
+  document.getElementById('pfixed').value='';
+  document.getElementById('pprice').value='';
+  document.getElementById('pcost').value='';
+  document.getElementById('pstock').value='';
+  document.getElementById('imgInput').value='';
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('imgSizeNote').textContent='';
+  document.getElementById('addBtn').textContent = 'Add Product';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+function cancelEdit(){ resetAddForm(); }
+
+function save(){
+  try{
+    localStorage.setItem('vartan_products', JSON.stringify(products));
+    localStorage.setItem('vartan_sales', JSON.stringify(sales));
+    localStorage.setItem('vartan_bills', JSON.stringify(bills));
+    if(typeof driveReady==='function' && (driveReady() || (window.google && typeof DRIVE_CLIENT_ID!=='undefined' && DRIVE_CLIENT_ID.indexOf('YOUR_CLIENT_ID')!==0))) uploadToDrive(true);
+    return true;
+  }catch(e){
+    if(e.name === 'SecurityError' || /sandboxed/i.test(e.message)){
+      alert('This page is running inside a restricted preview window, so it cannot save data here. Open this file directly (GitHub Pages link or your phone browser) and it will save normally.');
+    } else if(e.name === 'QuotaExceededError'){
+      alert('Storage is full. Try deleting an old product photo, or export/backup and clear some data.');
+    } else {
+      alert('Could not save data. (Error: ' + e.message + ')');
+    }
+    return false;
+  }
+}
+
+function showTab(t){
+  document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('btn-'+t).classList.add('active');
+  if(t==='home') renderDashboard();
+  if(t==='stock') renderProducts();
+  if(t==='sell') renderSellResults();
+  if(t==='bills') renderBillsList();
+  if(t==='stats') renderStats();
+}
+
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = new Image();
+      img.onload = function(){
+        let w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('imgInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  compressImage(file, 400, 0.6).then(dataUrl=>{
+    document.getElementById('imgPreview').src = dataUrl;
+    document.getElementById('imgPreview').style.display='block';
+    const kb = Math.round(dataUrl.length * 0.75 / 1024);
+    document.getElementById('imgSizeNote').textContent = 'Compressed photo size: ~' + kb + ' KB';
+  }).catch(()=>{ alert('Could not read that image, try another one.'); });
+});
+
+function addProduct(){
+  const number = document.getElementById('pnumber').value.trim() || nextNumber();
+  const barcode = document.getElementById('pbarcode').value.trim();
+  const name = document.getElementById('pname').value.trim();
+  const cat = document.getElementById('pcat').value.trim() || 'Other';
+  const size = document.getElementById('psize').value.trim();
+  const minStock = parseInt(document.getElementById('pminstock').value) || 5;
+  const desc = document.getElementById('pdesc').value.trim();
+  const fixedPrice = parseFloat(document.getElementById('pfixed').value) || 0;
+  const price = parseFloat(document.getElementById('pprice').value) || fixedPrice || 0;
+  const costPrice = document.getElementById('pcost').value.trim()==='' ? null : parseFloat(document.getElementById('pcost').value);
+  const stock = parseInt(document.getElementById('pstock').value)||0;
+  const img = document.getElementById('imgPreview').style.display!=='none' ? document.getElementById('imgPreview').src : '';
+
+  if(!name){ alert('Please enter a product name'); return; }
+  if(products.some(p=>p.number===number && p.id!==editingId)){ alert('This product number already exists. Use a different number.'); return; }
+
+  if(editingId){
+    const p = products.find(x=>x.id===editingId);
+    if(!p){ alert('Could not find the product to update.'); return; }
+    Object.assign(p, {number, barcode, name, cat, size, minStock, desc, fixedPrice, price, costPrice, stock, img: img || p.img});
+    if(!save()) return;
+  } else {
+    products.push({id: uid(), number, barcode, name, cat, size, minStock, desc, fixedPrice, price, costPrice, stock, img});
+    if(!save()) { products.pop(); return; }
+  }
+  const wasEditing = !!editingId;
+  resetAddForm();
+  alert(wasEditing ? 'Product updated successfully!' : 'Product added successfully!');
+  showTab('stock');
+}
+
+function renderProducts(){
+  const q = (document.getElementById('searchBox').value||'').toLowerCase();
+  const list = document.getElementById('plist');
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    (p.cat||'').toLowerCase().includes(q) ||
+    String(p.number).toLowerCase().includes(q) ||
+    (p.barcode||'').toLowerCase().includes(q)
+  );
+  if(filtered.length===0){ list.innerHTML = '<div class="empty">No products found. Add one from the "Add" tab.</div>'; return; }
+  const groups = {};
+  filtered.forEach(p=>{ (groups[p.cat] = groups[p.cat]||[]).push(p); });
+  list.innerHTML = Object.keys(groups).sort().map(cat => `
+    <div class="catheader">${cat} (${groups[cat].length})</div>
+    ${groups[cat].map(p => `
+      <div class="pitem${p.id===highlightPid?' hl':''}" id="prod-${p.id}">
+        <img src="${p.img||''}" onerror="this.style.background='#8882'">
+        <div class="pinfo">
+          <span><span class="pnum">#${p.number}</span>${p.name}</span>
+          <span>${p.siz
