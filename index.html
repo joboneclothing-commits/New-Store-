@@ -503,9 +503,27 @@ function updateCartPrice(id, newPrice){
   }
 }
 
+
+  // 1. Naya Quantity Input Handler Function
+function updateCartQtyInput(id, newQty){
+  const item = cart.find(x => x.id === id);
+  if(item){
+    const parsedQty = parseFloat(newQty);
+    if(isNaN(parsedQty) || parsedQty <= 0){
+      cart = cart.filter(x => x.id !== id); // Agar quantity 0 ya blank kare toh item cart se hat jaye
+    } else {
+      item.qty = parsedQty;
+    }
+    renderCart();
+  }
+}
+
+// 2. Updated renderCart Function (Editable Qty + Rate + Discount Calculation)
 function renderCart(){
   const box = document.getElementById('cartBox');
-  if(cart.length===0){
+  if(!box) return;
+  
+  if(cart.length === 0){
     box.innerHTML = '<div class="empty">Cart is empty. Select products below.</div>';
     return;
   }
@@ -514,17 +532,20 @@ function renderCart(){
   let cartHtml = cart.map(i => {
     const itemSub = i.price * i.qty;
     subtotal += itemSub;
+    const isKg = i.unit === 'kg';
+    const stepVal = isKg ? '0.001' : '1';
+    
     return `
       <div class="cartitem">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <b>${i.name}</b>
-          <div style="display:flex;gap:4px;">
+          <div style="display:flex;align-items:center;gap:4px;">
             <button class="secondary qtybtn" onclick="updateCartQty(${i.id}, -1)">-</button>
-            <span style="line-height:28px;">${i.qty}</span>
+            <input type="number" step="${stepVal}" value="${i.qty}" style="width:65px;padding:3px 5px;text-align:center;font-size:13px;font-weight:bold;" onchange="updateCartQtyInput(${i.id}, this.value)">
             <button class="secondary qtybtn" onclick="updateCartQty(${i.id}, 1)">+</button>
           </div>
         </div>
-        <div class="row" style="align-items:center;">
+        <div class="row" style="align-items:center;margin-top:4px;">
           <label style="margin:0;font-size:12px;">Rate (₹):</label>
           <input type="number" step="0.01" value="${i.price}" style="padding:4px 8px;font-size:13px;" onchange="updateCartPrice(${i.id}, this.value)">
           <div style="font-weight:700;text-align:right;">Sub: ₹${itemSub.toFixed(2)}</div>
@@ -533,8 +554,10 @@ function renderCart(){
     `;
   }).join('');
 
-  const discType = document.getElementById('discountType') ? document.getElementById('discountType').value : 'percent';
-  const discVal = parseFloat(document.getElementById('discountVal') ? document.getElementById('discountVal').value : 0) || 0;
+  const discTypeElem = document.getElementById('discountType');
+  const discValElem = document.getElementById('discountVal');
+  const discType = discTypeElem ? discTypeElem.value : 'percent';
+  const discVal = parseFloat(discValElem ? discValElem.value : 0) || 0;
   
   let discountAmount = discType === 'percent' ? (subtotal * discVal) / 100 : discVal;
   const finalTotal = Math.max(0, subtotal - discountAmount);
@@ -547,9 +570,9 @@ function renderCart(){
     </div>
   `;
   
-  box.innerHTML = cartHtml;
-}
-
+  box.innerHTML = cartHtml
+  ;
+  }
 function renderSellResults(){
   const q = (document.getElementById('sellSearchBox').value||'').toLowerCase();
   const list = document.getElementById('sellResults');
