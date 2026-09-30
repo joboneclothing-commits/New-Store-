@@ -158,8 +158,9 @@ button.drive{background:#1a73e8;}
 
 <div id="tab-stock" class="tab-content">
   <input class="search" id="searchBox" placeholder="Search by number / name / category / barcode" oninput="renderProducts()">
-  <div class="plist" id="plist"
-    <div id="tab-sell" class="tab-content">
+  <div class="plist" id="plist"></div>
+</div>
+<div id="tab-sell" class="tab-content">
   <input class="search" id="sellSearchBox" placeholder="Search / scan barcode to sell" oninput="renderSellResults()">
   <div class="plist" id="sellResults"></div>
   <h2>🧺 Current Bill</h2>
@@ -350,10 +351,8 @@ function editProduct(id){
   document.getElementById('addBtn').textContent = 'Update Product';
   document.getElementById('cancelEditBtn').style.display = 'inline-block';
   showTab('add');
-}></div>
-</div>
-
-  function resetAddForm(){
+}
+function resetAddForm(){
   editingId = null;
   currentProductCode = nextProductCode();
   document.getElementById('pname').value='';
