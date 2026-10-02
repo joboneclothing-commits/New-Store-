@@ -477,7 +477,7 @@ function renderProducts(){
         ${p.img ? `<img src="${p.img}">` : `<div style="width:56px;height:56px;border-radius:8px;background:#8882;display:flex;align-items:center;justify-content:center;">📦</div>`}
         <div class="pinfo">
           <div><span class="pnum">${p.number}</span><b>${p.name}</b></div>
-          <span>Buy: ₹${p.costPrice||0} · Sell: <b>₹${p.price}</b> · Stock: ${p.stock} ${p.unit==='kg'?'KG':'pcs'}</span>
+          <span>Sell: <b>₹${p.price}</b> · Stock: ${p.stock} ${p.unit==='kg'?'KG':'pcs'}</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="editProduct(${p.id})">Edit</button>
